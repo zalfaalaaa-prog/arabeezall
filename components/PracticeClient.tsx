@@ -6,6 +6,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Gem, Heart, Headphones, Mic, Volum
 import { buyHearts, saveQuizResult } from "@/app/actions";
 import { normalizeArabic } from "@/lib/utils";
 import type { Question } from "@/lib/types";
+import CatMascot from "@/components/CatMascot";
 
 type Feedback = { correct: boolean; message: string; answer: string };
 
@@ -23,6 +24,7 @@ export default function PracticeClient({
   lessonSlug,
   lessonTitle,
   mode,
+  level = 1,
   questions,
   initialHearts,
   initialDiamonds
@@ -30,6 +32,7 @@ export default function PracticeClient({
   lessonSlug: string;
   lessonTitle: string;
   mode: string;
+  level?: number;
   questions: Question[];
   initialHearts: number;
   initialDiamonds: number;
@@ -56,10 +59,9 @@ export default function PracticeClient({
   const score = useMemo(() => Math.round((firstTryCorrect / Math.max(questions.length, 1)) * 100), [firstTryCorrect, questions.length]);
   const modeLabel = mode === "listening" ? "Menyimak" : mode === "reading" ? "Membaca" : mode === "conversation" ? "Percakapan" : "Campuran 4 Maharah";
 
-  function checkAnswer(answer: string) {
-    if (!question || feedback) return;
-    setSelected(answer);
-    const correct = normalizeArabic(answer) === normalizeArabic(question.correct_answer);
+  function verifyAnswer() {
+    if (!question || feedback || !selected) return;
+    const correct = normalizeArabic(selected) === normalizeArabic(question.correct_answer);
     if (correct) {
       if (!wrongIds.includes(question.id)) setFirstTryCorrect((value) => value + 1);
       setWrongIds((items) => items.filter((id) => id !== question.id));
@@ -97,7 +99,7 @@ export default function PracticeClient({
     const result = await saveQuizResult({
       lessonSlug,
       score: finalScore,
-      correctCount: questions.length,
+      correctCount: firstTryCorrect,
       questionCount: questions.length,
       xpEarned,
       diamondsEarned
@@ -123,7 +125,7 @@ export default function PracticeClient({
     const browserWindow = window as Window & { SpeechRecognition?: any; webkitSpeechRecognition?: any };
     const Recognition = browserWindow.SpeechRecognition || browserWindow.webkitSpeechRecognition;
     if (!Recognition) {
-      checkAnswer(question?.correct_answer || "");
+      setSelected(question?.correct_answer || "");
       return;
     }
     const recognition = new Recognition();
@@ -135,7 +137,7 @@ export default function PracticeClient({
     recognition.onerror = () => setRecording(false);
     recognition.onresult = (event: any) => {
       const transcript = event.results?.[0]?.[0]?.transcript ?? "";
-      checkAnswer(transcript);
+      setSelected(transcript);
     };
     recognition.start();
   }
@@ -170,9 +172,9 @@ export default function PracticeClient({
         <h1 className="mt-5 text-2xl font-black">Nyawamu habis!</h1>
         <p className="mt-2 text-sm leading-6 text-[#718078]">Gunakan berlian untuk mengisi kembali 5 nyawa. Soal yang belum benar akan tetap menunggu untuk diulang.</p>
         <div className="my-5 flex items-center justify-center gap-2 text-lg font-black text-sky-600"><Gem size={20}/>{diamonds} berlian tersedia</div>
-        <button className="btn-primary w-full" onClick={refillHearts}>Isi 5 nyawa · 100 berlian</button>
+        <button className="btn-primary w-full" onClick={refillHearts}>Isi 5 nyawa · 25 berlian</button>
         {buyMessage && <p className="mt-3 text-sm font-bold text-[#718078]">{buyMessage}</p>}
-        <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-[#2e8b62]">Lihat toko Arabee</Link>
+        <Link href="/shop" className="mt-4 inline-block text-sm font-bold text-[#2e8b62]">Lihat toko Arabeeza</Link>
       </div>
     );
   }
@@ -189,11 +191,12 @@ export default function PracticeClient({
 
       <div className="surface p-5 md:p-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-2">
-          <span className="rounded-full bg-[#eaf7ef] px-3 py-1.5 text-xs font-black text-[#2e8b62]">{modeLabel}</span>
+          <span className="rounded-full bg-[#eaf7ef] px-3 py-1.5 text-xs font-black text-[#2e8b62]">Level {level} · {level <= 3 ? "Mudah" : level <= 7 ? "Menengah" : "Menantang"}</span><span className="rounded-full bg-[#fff4e5] px-3 py-1.5 text-xs font-black text-[#bd741b]">{modeLabel}</span>
           <span className="text-xs font-bold text-[#8a9890]">Soal {Math.min(index + 1, questions.length)} dari {questions.length} · {wrongIds.length} perlu diulang</span>
         </div>
+        <div className="mb-4 flex items-center gap-3 rounded-2xl bg-[#fff6e9] p-3"><CatMascot mood={feedback ? (feedback.correct ? "celebrate" : "thinking") : "happy"} size={68}/><div><p className="text-xs font-black text-[#c17b27]">ARABEEZA MENEMANIMU</p><p className="text-sm font-bold text-[#6d604c]">{feedback ? (feedback.correct ? "Yeay, jawabanmu tepat!" : "Tidak apa-apa, ayo coba lagi!") : "Ayo pikirkan jawabannya dulu, ya!"}</p></div></div>
         <h1 className="text-xl font-black leading-8 md:text-2xl">{question.prompt}</h1>
-        {question.prompt_arabic && <p className="arabic mt-5 rounded-2xl bg-[#fffdf7] px-4 py-5 text-center text-3xl font-bold">{question.prompt_arabic}</p>}
+        {question.prompt_arabic && !/arti kata|arti kosa kata|apa arti/i.test(question.prompt) && <p className="arabic mt-5 rounded-2xl bg-[#fffdf7] px-4 py-5 text-center text-3xl font-bold">{question.prompt_arabic}</p>}
 
         {(isListening || mode === "conversation") && question.audio_text && (
           <button onClick={() => speakArabic(question.audio_text || question.prompt_arabic || "")} className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-[#dce9df] bg-[#f7fcf8] px-4 py-3 font-bold text-[#2e8b62]">
@@ -207,7 +210,7 @@ export default function PracticeClient({
             <button onClick={startReading} disabled={recording || !!feedback} className="btn-primary mx-auto">
               <Mic size={18}/>{recording ? "Sedang mendengarkan..." : "Mulai membaca"}
             </button>
-            <p className="mt-3 text-xs text-[#8a9890]">Membutuhkan browser yang mendukung pengenalan suara. Jika tidak tersedia, Arabee menggunakan konfirmasi latihan.</p>
+            <p className="mt-3 text-xs text-[#8a9890]">Membutuhkan browser yang mendukung pengenalan suara. Jika tidak tersedia, Arabeeza menggunakan konfirmasi latihan.</p>
           </div>
         ) : (
           <div className="mt-6 grid gap-3">
@@ -215,7 +218,7 @@ export default function PracticeClient({
               const isCorrect = feedback && normalizeArabic(option) === normalizeArabic(question.correct_answer);
               const isWrong = feedback && selected === option && !feedback.correct;
               return (
-                <button key={option} disabled={!!feedback} onClick={() => checkAnswer(option)} className={`choice ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}>
+                <button key={option} disabled={!!feedback} onClick={() => setSelected(option)} className={`choice ${selected === option ? "border-[#2e8b62] bg-[#eaf7ef]" : ""} ${isCorrect ? "correct" : ""} ${isWrong ? "wrong" : ""}`}>
                   <span className="flex items-center justify-between gap-3"><span>{option}</span>{isCorrect ? <CheckCircle2 size={19}/> : isWrong ? <XCircle size={19}/> : null}</span>
                 </button>
               );
@@ -233,9 +236,9 @@ export default function PracticeClient({
             </button>
           </div>
         )}
-        {!feedback && <div className="mt-6 flex items-center justify-between text-xs font-bold text-[#8a9890]"><span>Jawab dengan teliti ya!</span><span className="flex items-center gap-1"><Gem size={14} className="text-sky-500"/>{diamonds}</span></div>}
+        {!feedback && <div className="mt-6"><div className="flex items-center justify-between text-xs font-bold text-[#8a9890]"><span>{selected ? "Sudah yakin? Periksa jawabanmu." : "Pilih jawaban terlebih dahulu."}</span><span className="flex items-center gap-1"><Gem size={14} className="text-sky-500"/>{diamonds}</span></div><button type="button" disabled={!selected || recording} onClick={verifyAnswer} className="btn-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-40">Periksa jawaban</button></div>}
       </div>
-      <div className="mt-4 text-center text-xs text-[#89968f]">Materi: {lessonTitle} · Satu sesi terdiri dari 15 soal</div>
+      <div className="mt-4 text-center text-xs text-[#89968f]">Materi: {lessonTitle} · Level {level} · Satu sesi terdiri dari 15 soal</div>
     </div>
   );
 }

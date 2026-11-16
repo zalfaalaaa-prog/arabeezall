@@ -5,7 +5,7 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        arabee: {
+        arabeeza: {
           ink: "#19352F",
           green: "#2E8B62",
           mint: "#EAF7EF",

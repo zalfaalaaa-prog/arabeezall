@@ -5,6 +5,9 @@ import AppShell from "@/components/AppShell";
 import { createClient } from "@/lib/supabase/server";
 import { StatPill } from "@/components/StatPill";
 
+export const dynamic = "force-dynamic";
+
+
 export default async function LessonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();

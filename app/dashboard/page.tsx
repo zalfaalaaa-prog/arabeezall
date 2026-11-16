@@ -3,8 +3,12 @@ import { redirect } from "next/navigation";
 import { Flame, Gem, Heart, Sparkles, Trophy } from "lucide-react";
 import AppShell from "@/components/AppShell";
 import LessonCard from "@/components/LessonCard";
+import CatMascot from "@/components/CatMascot";
 import { createClient } from "@/lib/supabase/server";
 import type { Lesson, Profile } from "@/lib/types";
+
+export const dynamic = "force-dynamic";
+
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -17,7 +21,7 @@ export default async function DashboardPage() {
     supabase.from("lesson_progress").select("*").eq("user_id", user.id)
   ]);
 
-  const profile = (profileData || { display_name: user.user_metadata?.display_name || "Teman Arabee", role: "student", xp: 0, diamonds: 0, hearts: 5, streak_count: 0 }) as Profile;
+  const profile = (profileData || { display_name: user.user_metadata?.display_name || "Teman Arabeeza", role: "student", xp: 0, diamonds: 0, hearts: 5, streak_count: 0 }) as Profile;
   const lessons = (lessonsData || []) as Lesson[];
   const progress = progressData || [];
   const getProgress = (lessonId: string) => progress.find((item: any) => item.lesson_id === lessonId);
@@ -44,7 +48,16 @@ export default async function DashboardPage() {
       <div className="mb-5 flex items-end justify-between gap-3"><div><p className="text-xs font-black tracking-[.16em] text-[#2e8b62]">JALUR PEMBELAJARAN</p><h2 className="mt-1 text-2xl font-black">Pilih materi belajarmu</h2></div><span className="rounded-full bg-white px-3 py-2 text-xs font-bold text-[#718078]">{lessons.length} materi tersedia</span></div>
       {lessons.length === 0 ? (
         <div className="surface p-8 text-center"><Sparkles className="mx-auto text-[#f39a32]" size={30}/><h3 className="mt-3 font-black">Materi belum tersedia</h3><p className="mt-2 text-sm text-[#718078]">Jalankan file supabase/seed.sql untuk memasukkan materi awal At-Ta‘āruf.</p></div>
-      ) : <div className="grid gap-5 lg:grid-cols-2">{lessons.map((lesson) => { const item = getProgress(lesson.id); return <LessonCard key={lesson.id} lesson={lesson} completed={item?.completed_sessions || 0} bestScore={item?.best_score || 0}/>; })}</div>}
+      ) : <div className="grid gap-5 lg:grid-cols-[1.3fr_.7fr]">
+        <section className="surface p-5 md:p-7">
+          <div className="mb-5 flex items-center gap-3"><CatMascot mood="happy" size={76}/><div><p className="text-xs font-black tracking-[.16em] text-[#2e8b62]">MATERI 1 · التَّعَارُفُ</p><h3 className="text-xl font-black">At-Ta‘āruf (Perkenalan)</h3><p className="text-xs text-[#718078]">Pilih satu tahap dan kumpulkan bintang!</p></div></div>
+          <div className="learning-path">{Array.from({ length: 10 }, (_, i) => { const level = i + 1; const offsets = [0, 22, 42, 24, 0, -22, -42, -24, 0, 22]; return <Link key={level} href={`/practice/${lessons[0].slug}?mode=mixed&level=${level}`} className="level-node" style={{ marginLeft: `calc(50% + ${offsets[i]}px - 31px)` }} aria-label={`Level ${level}`}><span>{level}</span><small>{level <= 3 ? "Mudah" : level <= 7 ? "Menengah" : "Menantang"}</small></Link>; })}</div>
+          <p className="mt-5 text-center text-xs text-[#89968f]">Setiap level dirancang untuk 15 soal. Kombinasi latihan mencakup kosakata, tata bahasa, menyimak, membaca, dan percakapan.</p>
+        </section>
+        <div className="space-y-4"><div className="rounded-[24px] bg-[#eaf7ef] p-5"><h3 className="font-black">Buku panduan</h3><p className="mt-2 text-sm leading-6 text-[#60776a]">Pelajari salam, perkenalan diri, kata tanya, kata ganti, dialog, dan penerapan dalam kehidupan sehari-hari.</p><Link href={`/lessons/${lessons[0].slug}`} className="mt-4 inline-flex rounded-xl bg-white px-4 py-3 text-sm font-extrabold text-[#2e8b62]">Buka buku panduan →</Link></div>
+          <div className="surface p-5"><p className="text-xs font-black text-[#2e8b62]">MATERI LAINNYA</p><p className="mt-2 text-sm leading-6 text-[#718078]">Materi 2–5 yang tercantum dalam bahan ajar: kata tanya, kata ganti, dialog perkenalan, dan penerapan materi.</p><Link href="/outcomes" className="mt-3 inline-flex text-sm font-extrabold text-[#2e8b62]">Lihat cakupan capaian →</Link></div></div>
+        </div>}
+      <div className="mt-7 grid gap-4 md:grid-cols-2">{lessons.map((lesson) => { const item = getProgress(lesson.id); return <LessonCard key={lesson.id} lesson={lesson} completed={item?.completed_sessions || 0} bestScore={item?.best_score || 0}/>; })}</div>
       <section className="mt-8 rounded-[24px] bg-[#fff4e5] p-5 md:p-6"><div className="flex flex-col items-start justify-between gap-3 md:flex-row md:items-center"><div><p className="text-xs font-black tracking-[.16em] text-[#bd741b]">TIPS HARI INI</p><h3 className="mt-1 text-lg font-black">اِسْتَمِرَّ فِي التَّعَلُّمِ</h3><p className="mt-1 text-sm text-[#806a4f]">Teruslah belajar sedikit demi sedikit. Konsistensi lebih penting daripada terburu-buru.</p></div><span className="text-4xl">🌱</span></div></section>
     </AppShell>
   );

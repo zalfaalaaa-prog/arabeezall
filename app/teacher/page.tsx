@@ -4,6 +4,9 @@ import AppShell from "@/components/AppShell";
 import { addTeacherNote } from "@/app/actions";
 import { createClient } from "@/lib/supabase/server";
 
+export const dynamic = "force-dynamic";
+
+
 export default async function TeacherPage({ searchParams }: { searchParams: Promise<{ success?: string; error?: string }> }) {
   const params = await searchParams;
   const supabase = await createClient();

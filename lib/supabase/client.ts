@@ -1,7 +1,14 @@
 import { createBrowserClient } from "@supabase/ssr";
 
 export function createClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim() ||
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY?.trim();
+
+  if (!url || !key) {
+    throw new Error("Konfigurasi Supabase belum lengkap. Periksa Environment Variables aplikasi.");
+  }
+
   return createBrowserClient(url, key);
 }

@@ -4,12 +4,16 @@ import PracticeClient from "@/components/PracticeClient";
 import { createClient } from "@/lib/supabase/server";
 import type { Question } from "@/lib/types";
 
+export const dynamic = "force-dynamic";
+
+
 const allowedModes = ["mixed", "listening", "reading", "conversation"];
 
-export default async function PracticePage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ mode?: string }> }) {
+export default async function PracticePage({ params, searchParams }: { params: Promise<{ slug: string }>; searchParams: Promise<{ mode?: string; level?: string }> }) {
   const { slug } = await params;
   const query = await searchParams;
   const mode = allowedModes.includes(query.mode || "") ? (query.mode || "mixed") : "mixed";
+  const level = Math.min(10, Math.max(1, Number.parseInt(query.level || "1", 10) || 1));
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
@@ -30,7 +34,7 @@ export default async function PracticePage({ params, searchParams }: { params: P
 
   return (
     <AppShell stats={{ streak: profile?.streak_count || 0, diamonds: profile?.diamonds || 0, hearts: profile?.hearts || 0 }} role={profile?.role || "student"}>
-      <PracticeClient lessonSlug={slug} lessonTitle={lesson.title} mode={mode} questions={questions} initialHearts={profile?.hearts ?? 5} initialDiamonds={profile?.diamonds ?? 0}/>
+      <PracticeClient lessonSlug={slug} lessonTitle={lesson.title} mode={mode} level={level} questions={questions} initialHearts={profile?.hearts ?? 5} initialDiamonds={profile?.diamonds ?? 0}/>
     </AppShell>
   );
 }

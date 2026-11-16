@@ -1,11 +1,11 @@
--- ARABEE database schema for Supabase / PostgreSQL
+-- ARABEEZA database schema for Supabase / PostgreSQL
 -- Run this file in Supabase SQL Editor or through Supabase CLI.
 
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  display_name text not null default 'Teman Arabee',
+  display_name text not null default 'Teman Arabeeza',
   role text not null default 'student' check (role in ('student', 'teacher', 'admin')),
   xp integer not null default 0 check (xp >= 0),
   diamonds integer not null default 0 check (diamonds >= 0),
@@ -115,7 +115,7 @@ begin
   insert into public.profiles (id, display_name)
   values (
     new.id,
-    coalesce(nullif(new.raw_user_meta_data->>'display_name', ''), split_part(new.email, '@', 1), 'Teman Arabee')
+    coalesce(nullif(new.raw_user_meta_data->>'display_name', ''), split_part(new.email, '@', 1), 'Teman Arabeeza')
   )
   on conflict (id) do nothing;
   return new;
@@ -281,7 +281,7 @@ begin
 end;
 $$;
 
-create or replace function public.buy_hearts(p_cost integer default 100)
+create or replace function public.buy_hearts(p_cost integer default 25)
 returns jsonb
 language plpgsql
 security definer
@@ -291,12 +291,12 @@ declare
   v_user uuid := auth.uid();
   v_diamonds integer;
   v_hearts integer;
-  v_cost integer := greatest(1, least(coalesce(p_cost, 100), 10000));
+  v_cost integer := greatest(1, least(coalesce(p_cost, 25), 10000));
 begin
   if v_user is null then raise exception 'Silakan login terlebih dahulu.'; end if;
   select diamonds, hearts into v_diamonds, v_hearts from public.profiles where id = v_user for update;
   if v_hearts >= 5 then raise exception 'Nyawa kamu sudah penuh.'; end if;
-  if v_diamonds < v_cost then raise exception 'Berlian tidak cukup. Kamu membutuhkan 100 berlian.'; end if;
+  if v_diamonds < v_cost then raise exception 'Berlian tidak cukup. Kamu membutuhkan 25 berlian.'; end if;
 
   update public.profiles set diamonds = diamonds - v_cost, hearts = 5 where id = v_user;
   return jsonb_build_object('ok', true, 'hearts', 5, 'diamonds', v_diamonds - v_cost);

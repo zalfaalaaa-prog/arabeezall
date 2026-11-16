@@ -73,7 +73,7 @@ cross join (values
   ('vocabulary','multiple_choice','Apa arti kalimat أَنَا مِنْ إِنْدُونِيسِيَا؟','أَنَا مِنْ إِنْدُونِيسِيَا','["Saya dari Indonesia","Saya siswa","Nama saya Indonesia"]','Saya dari Indonesia','أَنَا مِنْ إِنْدُونِيسِيَا berarti saya dari Indonesia.','أَنَا مِنْ إِنْدُونِيسِيَا',9),
   ('grammar','multiple_choice','Kata tanya yang berarti “berapa” adalah ...','كَمْ','["مَنْ","كَمْ","كَيْفَ"]','كَمْ','كَمْ digunakan untuk menanyakan jumlah atau bilangan.','كَمْ',10),
   ('conversation','multiple_choice','Jika ditanya مَا اسْمُكَ؟, jawaban yang sesuai adalah ...','مَا اسْمُكَ؟','["اِسْمِي فَاطِمَةُ","أَنَا بِخَيْرٍ","أَنَا مِنْ بَانْدُونْغَ"]','اِسْمِي فَاطِمَةُ','مَا اسْمُكَ؟ berarti siapa namamu? Jawab dengan اِسْمِي ...','مَا اسْمُكَ؟',11),
-  ('conversation','multiple_choice','Apa arti مِنْ أَيْنَ أَنْتَ؟','مِنْ أَيْنَ أَنْتَ؟','["Siapa kamu?","Dari mana asalmu?","Berapa umurmu?"]','Dari mana asalmu؟','مِنْ أَيْنَ أَنْتَ؟ digunakan untuk menanyakan asal.','مِنْ أَيْنَ أَنْتَ؟',12),
+  ('conversation','multiple_choice','Apa arti مِنْ أَيْنَ أَنْتَ؟','مِنْ أَيْنَ أَنْتَ؟','["Siapa kamu?","Dari mana asalmu?","Berapa umurmu?"]','Dari mana asalmu?','مِنْ أَيْنَ أَنْتَ؟ digunakan untuk menanyakan asal.','مِنْ أَيْنَ أَنْتَ؟',12),
   ('vocabulary','multiple_choice','Apa arti أَنَا بِخَيْرٍ؟','أَنَا بِخَيْرٍ','["Saya baik","Saya dari sekolah","Nama saya Ali"]','Saya baik','أَنَا بِخَيْرٍ berarti saya baik.','أَنَا بِخَيْرٍ',13),
   ('grammar','multiple_choice','Kata ganti untuk “kamu perempuan” adalah ...','أَنْتِ','["أَنْتَ","أَنْتِ","هِيَ"]','أَنْتِ','أَنْتِ adalah kata ganti orang kedua perempuan.','أَنْتِ',14),
   ('conversation','multiple_choice','Ungkapan yang tepat untuk memperkenalkan nama adalah ...','اِسْمِي مُحَمَّدٌ','["اِسْمِي مُحَمَّدٌ","أَيْنَ مَدْرَسَتُكَ؟","كَمْ عُمْرُكَ؟"]','اِسْمِي مُحَمَّدٌ','اِسْمِي ... berarti nama saya ...','اِسْمِي مُحَمَّدٌ',15)
@@ -96,3 +96,13 @@ insert into public.questions (lesson_id, mode, skill, question_type, prompt, pro
 select lesson_id, 'conversation', 'conversation', 'conversation_question', prompt, prompt_arabic, options, correct_answer, explanation, coalesce(audio_text, prompt_arabic), sort_order, true
 from public.questions where lesson_id = '11111111-1111-4111-8111-111111111111' and mode = 'mixed'
 on conflict (lesson_id, mode, sort_order) do nothing;
+
+
+-- Correct the Indonesian answer punctuation if an earlier seed version was already applied.
+update public.questions q
+set correct_answer = 'Dari mana asalmu?'
+from public.lessons l
+where q.lesson_id = l.id
+  and l.slug = 'at-taaruf'
+  and q.mode = 'mixed'
+  and q.sort_order = 12;

@@ -1,5 +1,4 @@
-\
-# Database overview
+# Database overview — ARABEEZA
 
 - `profiles`: role, XP, diamonds, hearts, streak, avatar.
 - `lessons`: learning units (initially At-Ta‘āruf).
@@ -10,4 +9,4 @@
 - `quiz_attempts`: score and reward history.
 - `teacher_notes`: teacher feedback attached to a student and lesson.
 
-The SQL migration enables RLS and adds `record_quiz_result` and `buy_hearts` RPC functions.
+The SQL migrations enable Row Level Security (RLS) and add `record_quiz_result`, `buy_hearts`, `update_my_avatar`, and `update_my_avatar_v2` RPC functions. Run migration `002_arabeeza_revision.sql` after `001_init.sql` on existing projects. It adds avatar customization fields and changes the heart refill price to 25 diamonds.
